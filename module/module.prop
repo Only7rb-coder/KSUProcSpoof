@@ -1,0 +1,6 @@
+id=procspoof
+name=ProcSpoof
+version=v1.0.0
+versionCode=1
+author=Zodiac
+description=Zygisk module that presents stock process state to selected apps: fake low parent PID (getppid>5000 fix), Seccomp:2 in /proc/self/status and prctl(PR_GET_SECCOMP), TracerPid:0, plus optional hiding of chosen processes from /proc and cgroup views. Configure via WebUI in KernelSU/MMRL.
