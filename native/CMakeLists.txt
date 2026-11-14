@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(procspoof LANGUAGES CXX)
 
+# CMake >= 4 removed support for cmake_minimum_required < 3.5, which breaks
+# LSPlt's bundled build script when pulled in via FetchContent.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+message(STATUS "CMake ${CMAKE_VERSION}, toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
