@@ -1,0 +1,53 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build all ABIs
+        run: |
+          set -e
+          for ABI in arm64-v8a armeabi-v7a x86 x86_64; do
+            cmake -S native -B "build-$ABI" -G Ninja \
+              -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake" \
+              -DANDROID_ABI="$ABI" \
+              -DANDROID_PLATFORM=android-26 \
+              -DANDROID_STL=c++_static \
+              -DCMAKE_BUILD_TYPE=Release
+            cmake --build "build-$ABI" -j
+          done
+
+      - name: Assemble module zip
+        run: |
+          set -e
+          rm -rf out && mkdir -p out/zygisk
+          cp -r module/. out/
+          cp build-arm64-v8a/libprocspoof.so   out/zygisk/arm64-v8a.so
+          cp build-armeabi-v7a/libprocspoof.so out/zygisk/armeabi-v7a.so
+          cp build-x86/libprocspoof.so         out/zygisk/x86.so
+          cp build-x86_64/libprocspoof.so      out/zygisk/x86_64.so
+          chmod 644 out/zygisk/*.so
+          find out -name '.gitkeep' -delete
+          cd out
+          zip -r9 ../procspoof.zip .
+          cd ..
+          ls -l procspoof.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: procspoof-zip
+          path: procspoof.zip
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: procspoof.zip
